@@ -107,8 +107,8 @@ class TestServicePort:
         } in reprs
 
     def test_parse_invalid_port(self):
-        port_def = '4000p'
         with pytest.raises(ConfigurationError):
+            port_def = '4000p'
             ServicePort.parse(port_def)
 
     def test_parse_invalid_publish_range(self):

@@ -841,7 +841,6 @@ class ProjectTest(unittest.TestCase):
             assert fake_push.call_count == 2
 
     def test_get_secrets_no_secret_def(self):
-        service = 'foo'
         secret_source = 'bar'
 
         secret_defs = mock.Mock()
@@ -849,6 +848,7 @@ class ProjectTest(unittest.TestCase):
         secret = mock.Mock(source=secret_source)
 
         with self.assertRaises(ConfigurationError):
+            service = 'foo'
             get_secrets(service, [secret], secret_defs)
 
     def test_get_secrets_external_warning(self):

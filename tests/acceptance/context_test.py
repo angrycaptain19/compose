@@ -13,9 +13,8 @@ class ContextTestCase(unittest.TestCase):
         cls.docker_dir = os.path.join(os.environ.get("HOME", "/tmp"), '.docker')
         if not os.path.exists(cls.docker_dir):
             os.makedirs(cls.docker_dir)
-        f = open(os.path.join(cls.docker_dir, "config.json"), "w")
-        f.write("{}")
-        f.close()
+        with open(os.path.join(cls.docker_dir, "config.json"), "w") as f:
+            f.write("{}")
         cls.docker_config = os.path.join(cls.docker_dir, "config.json")
         os.environ['DOCKER_CONFIG'] = cls.docker_config
         ContextAPI.create_context("testcontext", host="tcp://doesnotexist:8000")

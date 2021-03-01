@@ -66,9 +66,8 @@ def denormalize_config(config, image_digests=None):
             if 'external_name' in conf:
                 del conf['external_name']
 
-            if 'name' in conf:
-                if 'external' in conf:
-                    conf['external'] = bool(conf['external'])
+            if 'name' in conf and 'external' in conf:
+                conf['external'] = bool(conf['external'])
     return result
 
 

@@ -321,7 +321,7 @@ def get_networks(service_dict, network_definitions):
                 'Service "{}" uses an undefined network "{}"'
                 .format(service_dict['name'], name))
 
-    if any([v.get('priority') for v in networks.values()]):
+    if any(v.get('priority') for v in networks.values()):
         return OrderedDict(sorted(
             networks.items(),
             key=lambda t: t[1].get('priority') or 0, reverse=True

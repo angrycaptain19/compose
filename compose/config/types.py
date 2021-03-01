@@ -190,10 +190,12 @@ class MountSpec:
         return self.as_volume_spec().repr()
 
     def repr(self):
-        res = {}
-        for field in self._fields:
-            if getattr(self, field, None):
-                res[field] = getattr(self, field)
+        res = {
+            field: getattr(self, field)
+            for field in self._fields
+            if getattr(self, field, None)
+        }
+
         if self.options:
             res[self.type] = self.options
         return res
@@ -384,10 +386,7 @@ class ServicePort(namedtuple('_ServicePort', 'target published protocol mode ext
             result = []
             try:
                 for k, v in build_port_bindings([spec]).items():
-                    if '/' in k:
-                        target, proto = k.split('/', 1)
-                    else:
-                        target, proto = (k, None)
+                    target, proto = k.split('/', 1) if '/' in k else (k, None)
                     for pub in v:
                         if pub is None:
                             result.append(

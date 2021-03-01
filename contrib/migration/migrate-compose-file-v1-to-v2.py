@@ -159,10 +159,7 @@ def main(args):
     with open(opts.filename) as fh:
         new_format = migrate(fh.read())
 
-    if opts.in_place:
-        output = open(opts.filename, 'w')
-    else:
-        output = sys.stdout
+    output = open(opts.filename, 'w') if opts.in_place else sys.stdout
     write(output, new_format, opts.indent, opts.width)
 
 

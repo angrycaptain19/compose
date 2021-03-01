@@ -43,7 +43,7 @@ class Version(namedtuple('_Version', 'major minor patch stage edition')):
         version = version.lstrip('v')
         version, _, stage = version.partition('-')
         if stage:
-            if not any(marker in stage for marker in STAGES):
+            if all(marker not in stage for marker in STAGES):
                 edition = stage
                 stage = None
             elif '-' in stage:
@@ -101,11 +101,8 @@ def group_versions(versions):
             [Version(2, 1, 0)],
         ]
     """
-    return list(
-        list(releases)
-        for _, releases
-        in itertools.groupby(versions, operator.attrgetter('major_minor'))
-    )
+    return [list(releases) for _, releases
+            in itertools.groupby(versions, operator.attrgetter('major_minor'))]
 
 
 def get_latest_versions(versions, num=1):

@@ -405,7 +405,7 @@ class TopLevelCommand:
             return
 
         if options['--volumes']:
-            print('\n'.join(volume for volume in compose_config.volumes))
+            print('\n'.join(compose_config.volumes))
             return
 
         if options['--hash'] is not None:
@@ -601,11 +601,7 @@ class TopLevelCommand:
 
         Usage: help [COMMAND]
         """
-        if options['COMMAND']:
-            subject = get_handler(cls, options['COMMAND'])
-        else:
-            subject = cls
-
+        subject = get_handler(cls, options['COMMAND']) if options['COMMAND'] else cls
         print(getdoc(subject))
 
     @metrics()
@@ -876,7 +872,7 @@ class TopLevelCommand:
         )
         stopped_containers = [c for c in all_containers if not c.is_running]
 
-        if len(stopped_containers) > 0:
+        if stopped_containers:
             print("Going to remove", list_containers(stopped_containers))
             if options.get('--force') \
                     or yesno("Are you sure? [yN] ", default=False):
@@ -1039,10 +1035,7 @@ class TopLevelCommand:
 
             top_data = self.project.client.top(container.name)
             headers = top_data.get("Titles")
-            rows = []
-
-            for process in top_data.get("Processes", []):
-                rows.append(process)
+            rows = [process for process in top_data.get("Processes", [])]
 
             print(container.name)
             print(Formatter.table(headers, rows))
@@ -1247,10 +1240,11 @@ def compute_service_exit_code(exit_value_from, attached_containers):
 def compute_exit_code(exit_value_from, attached_containers, cascade_starter, all_containers):
     exit_code = 0
     for e in all_containers:
-        if (not e.is_running and cascade_starter == e.name):
-            if not e.exit_code == 0:
-                exit_code = e.exit_code
-                break
+        if (
+            not e.is_running and cascade_starter == e.name
+        ) and e.exit_code != 0:
+            exit_code = e.exit_code
+            break
 
     return exit_code
 
@@ -1584,11 +1578,7 @@ def parse_scale_args(options):
 def build_exec_command(options, container_id, command):
     args = ["exec"]
 
-    if options["--detach"]:
-        args += ["--detach"]
-    else:
-        args += ["--interactive"]
-
+    args += ["--detach"] if options["--detach"] else ["--interactive"]
     if not options["-T"]:
         args += ["--tty"]
 
@@ -1627,18 +1617,18 @@ def has_container_with_state(containers, state):
 def filter_services(filt, services, project):
     def should_include(service):
         for f in filt:
-            if f == 'status':
-                state = filt[f]
-                containers = project.containers([service.name], stopped=True)
-                if not has_container_with_state(containers, state):
-                    return False
-            elif f == 'source':
+            if f == 'source':
                 source = filt[f]
-                if source == 'image' or source == 'build':
+                if source in ['image', 'build']:
                     if source not in service.options:
                         return False
                 else:
                     raise UserError("Invalid value for source filter: %s" % source)
+            elif f == 'status':
+                state = filt[f]
+                containers = project.containers([service.name], stopped=True)
+                if not has_container_with_state(containers, state):
+                    return False
             else:
                 raise UserError("Invalid filter: %s" % f)
         return True

@@ -161,11 +161,7 @@ def parallel_execute_iter(objects, func, get_deps, limit):
     if get_deps is None:
         get_deps = _no_deps
 
-    if limit is None:
-        limiter = NoLimit()
-    else:
-        limiter = Semaphore(limit)
-
+    limiter = NoLimit() if limit is None else Semaphore(limit)
     results = Queue()
     state = State(objects)
 

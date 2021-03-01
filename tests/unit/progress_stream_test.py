@@ -101,7 +101,7 @@ class ProgressStreamTestCase(unittest.TestCase):
         assert progress_stream.get_digest_from_push(events) == digest
 
     def test_get_digest_from_pull(self):
-        events = list()
+        events = []
         assert progress_stream.get_digest_from_pull(events) is None
 
         digest = "sha256:abcd"

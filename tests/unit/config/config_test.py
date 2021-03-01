@@ -180,11 +180,11 @@ class ConfigTest(unittest.TestCase):
     def test_v1_file_version(self):
         cfg = config.load(build_config_details({'web': {'image': 'busybox'}}))
         assert cfg.version == V1
-        assert list(s['name'] for s in cfg.services) == ['web']
+        assert [s['name'] for s in cfg.services] == ['web']
 
         cfg = config.load(build_config_details({'version': {'image': 'busybox'}}))
         assert cfg.version == V1
-        assert list(s['name'] for s in cfg.services) == ['version']
+        assert [s['name'] for s in cfg.services] == ['version']
 
     def test_wrong_version_type(self):
         for version in [1, 2, 2.0]:
@@ -3810,7 +3810,7 @@ class VolumeConfigTest(unittest.TestCase):
 
     @pytest.mark.skipif(IS_WINDOWS_PLATFORM, reason='posix paths')
     def test_volumes_order_is_preserved(self):
-        volumes = ['/{0}:/{0}'.format(i) for i in range(0, 6)]
+        volumes = ['/{0}:/{0}'.format(i) for i in range(6)]
         shuffle(volumes)
         cfg = make_service_dict('foo', {'build': '.', 'volumes': volumes})
         assert cfg['volumes'] == volumes
@@ -5019,9 +5019,9 @@ class ExpandPathTest(unittest.TestCase):
         assert result == abs_path
 
     def test_expand_path_with_tilde(self):
-        test_path = '~/otherdir/somefile'
         with mock.patch.dict(os.environ):
             os.environ['HOME'] = user_path = '/home/user/'
+            test_path = '~/otherdir/somefile'
             result = config.expand_path(self.working_dir, test_path)
 
         assert result == user_path + 'otherdir/somefile'

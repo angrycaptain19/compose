@@ -34,9 +34,9 @@ def yesno(prompt, default=None):
     """
     answer = input(prompt).strip().lower()
 
-    if answer == "y" or answer == "yes":
+    if answer in ["y", "yes"]:
         return True
-    elif answer == "n" or answer == "no":
+    elif answer in ["n", "no"]:
         return False
     elif answer == "":
         return default

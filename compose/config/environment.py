@@ -120,6 +120,4 @@ class Environment(dict):
         value = self.get(key)
         if not value:
             return default
-        if value.lower() in ['0', 'false']:
-            return False
-        return True
+        return value.lower() not in ['0', 'false']

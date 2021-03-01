@@ -157,8 +157,8 @@ class TestSetupConsoleHandlerTestCase:
 class TestConvergeStrategyFromOptsTestCase:
 
     def test_invalid_opts(self):
-        options = {'--force-recreate': True, '--no-recreate': True}
         with pytest.raises(UserError):
+            options = {'--force-recreate': True, '--no-recreate': True}
             convergence_strategy_from_opts(options)
 
     def test_always(self):
