@@ -1224,10 +1224,7 @@ class Service:
 
             # extract actual host port from tuple of (host_ip, host_port)
             _, host_port = external_binding
-            if host_port is not None:
-                return True
-
-            return False
+            return host_port is not None
 
         return any(has_host_port(binding) for binding in self.options.get('ports', []))
 
@@ -1341,11 +1338,7 @@ class Service:
             return True
 
         service_profiles = self.options.get('profiles')
-        for profile in enabled_profiles:
-            if profile in service_profiles:
-                return True
-
-        return False
+        return any(profile in service_profiles for profile in enabled_profiles)
 
 
 def short_id_alias_exists(container, network):
@@ -1776,9 +1769,11 @@ def convert_blkio_config(blkio_config):
     ]:
         if field not in blkio_config:
             continue
-        arr = []
-        for item in blkio_config[field]:
-            arr.append({k.capitalize(): v for k, v in item.items()})
+        arr = [
+            {k.capitalize(): v for k, v in item.items()}
+            for item in blkio_config[field]
+        ]
+
         result[field] = arr
     return result
 

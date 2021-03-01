@@ -153,11 +153,7 @@ def docker_client(environment, version=None, context=None, tls_version=None):
         kwargs['version'] = version
 
     timeout = environment.get('COMPOSE_HTTP_TIMEOUT')
-    if timeout:
-        kwargs['timeout'] = int(timeout)
-    else:
-        kwargs['timeout'] = HTTP_TIMEOUT
-
+    kwargs['timeout'] = int(timeout) if timeout else HTTP_TIMEOUT
     kwargs['user_agent'] = generate_user_agent()
 
     # Workaround for

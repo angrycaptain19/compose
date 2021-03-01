@@ -244,7 +244,7 @@ class ServiceTest(unittest.TestCase):
             client=self.mock_client)
         opts = service._get_container_create_options({'image': 'foo'}, 1)
         assert opts['hostname'] == 'name.domain.tld', 'hostname'
-        assert not ('domainname' in opts), 'domainname'
+        assert 'domainname' not in opts, 'domainname'
 
     def test_split_domainname_fqdn(self):
         self.mock_client.api_version = '1.22'

@@ -77,20 +77,23 @@ def format_ports(instance):
 
 @FormatChecker.cls_checks(format="expose", raises=ValidationError)
 def format_expose(instance):
-    if isinstance(instance, str):
-        if not re.match(VALID_EXPOSE_FORMAT, instance):
-            raise ValidationError(
-                "should be of the format 'PORT[/PROTOCOL]'")
+    if isinstance(instance, str) and not re.match(
+        VALID_EXPOSE_FORMAT, instance
+    ):
+        raise ValidationError(
+            "should be of the format 'PORT[/PROTOCOL]'")
 
     return True
 
 
 @FormatChecker.cls_checks("subnet_ip_address", raises=ValidationError)
 def format_subnet_ip_address(instance):
-    if isinstance(instance, str):
-        if not re.match(VALID_REGEX_IPV4_CIDR, instance) and \
-                not re.match(VALID_REGEX_IPV6_CIDR, instance):
-            raise ValidationError("should use the CIDR format")
+    if (
+        isinstance(instance, str)
+        and not re.match(VALID_REGEX_IPV4_CIDR, instance)
+        and not re.match(VALID_REGEX_IPV6_CIDR, instance)
+    ):
+        raise ValidationError("should use the CIDR format")
 
     return True
 
@@ -163,13 +166,15 @@ def validate_top_level_object(config_file):
 def validate_ulimits(service_config):
     ulimit_config = service_config.config.get('ulimits', {})
     for limit_name, soft_hard_values in ulimit_config.items():
-        if isinstance(soft_hard_values, dict):
-            if not soft_hard_values['soft'] <= soft_hard_values['hard']:
-                raise ConfigurationError(
-                    "Service '{s.name}' has invalid ulimit '{ulimit}'. "
-                    "'soft' value can not be greater than 'hard' value ".format(
-                        s=service_config,
-                        ulimit=ulimit_config))
+        if (
+            isinstance(soft_hard_values, dict)
+            and not soft_hard_values['soft'] <= soft_hard_values['hard']
+        ):
+            raise ConfigurationError(
+                "Service '{s.name}' has invalid ulimit '{ulimit}'. "
+                "'soft' value can not be greater than 'hard' value ".format(
+                    s=service_config,
+                    ulimit=ulimit_config))
 
 
 def validate_extends_file_path(service_name, extends_options, filename):

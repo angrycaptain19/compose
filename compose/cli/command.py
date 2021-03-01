@@ -181,10 +181,7 @@ def execution_context_labels(config_details, environment_file):
 
 
 def use_config_from_stdin(config_details):
-    for c in config_details.config_files:
-        if not c.filename:
-            return True
-    return False
+    return any(not c.filename for c in config_details.config_files)
 
 
 def config_files_label(config_details):

@@ -308,9 +308,9 @@ def find(base_dir, filenames, environment, override_dir=None):
 
     log.debug("Using configuration files: {}".format(",".join(filenames)))
     return ConfigDetails(
-        override_dir if override_dir else os.path.dirname(filenames[0]),
+        override_dir or os.path.dirname(filenames[0]),
         [ConfigFile.from_filename(f) for f in filenames],
-        environment
+        environment,
     )
 
 
@@ -375,14 +375,14 @@ def find_candidates_in_parent_dirs(filenames, path):
 
 
 def check_swarm_only_config(service_dicts):
-    warning_template = (
-        "Some services ({services}) use the '{key}' key, which will be ignored. "
-        "Compose does not support '{key}' configuration - use "
-        "`docker stack deploy` to deploy to a swarm."
-    )
     key = 'configs'
     services = [s for s in service_dicts if s.get(key)]
     if services:
+        warning_template = (
+            "Some services ({services}) use the '{key}' key, which will be ignored. "
+            "Compose does not support '{key}' configuration - use "
+            "`docker stack deploy` to deploy to a swarm."
+        )
         log.warning(
             warning_template.format(
                 services=", ".join(sorted(s['name'] for s in services)),
@@ -476,8 +476,7 @@ def format_device_option(entity_type, config):
     o = config['driver_opts'].get('o')
     device = config['driver_opts'].get('device')
     if o and o == 'bind' and device:
-        fullpath = os.path.abspath(os.path.expanduser(device))
-        return fullpath
+        return os.path.abspath(os.path.expanduser(device))
 
 
 def validate_external(entity_type, name, config, version):
@@ -734,15 +733,17 @@ def validate_extended_service_dict(service_dict, filename, service):
         raise ConfigurationError(
             "%s services with 'volumes_from' cannot be extended" % error_prefix)
 
-    if 'net' in service_dict:
-        if get_container_name_from_network_mode(service_dict['net']):
-            raise ConfigurationError(
-                "%s services with 'net: container' cannot be extended" % error_prefix)
+    if 'net' in service_dict and get_container_name_from_network_mode(
+        service_dict['net']
+    ):
+        raise ConfigurationError(
+            "%s services with 'net: container' cannot be extended" % error_prefix)
 
-    if 'network_mode' in service_dict:
-        if get_service_name_from_network_mode(service_dict['network_mode']):
-            raise ConfigurationError(
-                "%s services with 'network_mode: service' cannot be extended" % error_prefix)
+    if 'network_mode' in service_dict and get_service_name_from_network_mode(
+        service_dict['network_mode']
+    ):
+        raise ConfigurationError(
+            "%s services with 'network_mode: service' cannot be extended" % error_prefix)
 
     if 'depends_on' in service_dict:
         raise ConfigurationError(
@@ -755,10 +756,7 @@ def validate_service(service_config, service_names, config_file):
         if 'pull' in args:
             return False
 
-        if '--no-build' in args:
-            return False
-
-        return True
+        return '--no-build' not in args
 
     service_dict, service_name = service_config.config, service_config.name
     validate_service_constraints(service_dict, service_name, config_file)
@@ -907,11 +905,13 @@ def finalize_service_volumes(service_dict, environment):
             else:
                 finalized_volumes.append(VolumeSpec.parse(v, normalize, win_host))
 
-        duplicate_mounts = []
         mounts = [v.as_volume_spec() if isinstance(v, MountSpec) else v for v in finalized_volumes]
-        for mount in mounts:
-            if list(map(attrgetter('internal'), mounts)).count(mount.internal) > 1:
-                duplicate_mounts.append(mount.repr())
+        duplicate_mounts = [
+            mount.repr()
+            for mount in mounts
+            if list(map(attrgetter('internal'), mounts)).count(mount.internal)
+            > 1
+        ]
 
         if duplicate_mounts:
             raise ConfigurationError("Duplicate mount points: [%s]" % (
@@ -969,15 +969,16 @@ def finalize_service(service_config, service_names, version, environment,
 
 
 def normalize_v1_service_format(service_dict):
-    if 'log_driver' in service_dict or 'log_opt' in service_dict:
-        if 'logging' not in service_dict:
-            service_dict['logging'] = {}
-        if 'log_driver' in service_dict:
-            service_dict['logging']['driver'] = service_dict['log_driver']
-            del service_dict['log_driver']
-        if 'log_opt' in service_dict:
-            service_dict['logging']['options'] = service_dict['log_opt']
-            del service_dict['log_opt']
+    if (
+        'log_driver' in service_dict or 'log_opt' in service_dict
+    ) and 'logging' not in service_dict:
+        service_dict['logging'] = {}
+    if 'log_driver' in service_dict:
+        service_dict['logging']['driver'] = service_dict['log_driver']
+        del service_dict['log_driver']
+    if 'log_opt' in service_dict:
+        service_dict['logging']['options'] = service_dict['log_opt']
+        del service_dict['log_opt']
 
     if 'dockerfile' in service_dict:
         service_dict['build'] = service_dict.get('build', {})
@@ -1405,23 +1406,21 @@ def split_path_mapping(volume_path):
         return (volume_path.get('target'), volume_path)
     drive, volume_config = splitdrive(volume_path)
 
-    if ':' in volume_config:
-        (host, container) = volume_config.split(':', 1)
-        container_drive, container_path = splitdrive(container)
-        mode = None
-        if ':' in container_path:
-            container_path, mode = container_path.rsplit(':', 1)
-
-        return (container_drive + container_path, (drive + host, mode))
-    else:
+    if ':' not in volume_config:
         return (volume_path, None)
+
+    (host, container) = volume_config.split(':', 1)
+    container_drive, container_path = splitdrive(container)
+    mode = None
+    if ':' in container_path:
+        container_path, mode = container_path.rsplit(':', 1)
+
+    return (container_drive + container_path, (drive + host, mode))
 
 
 def process_security_opt(service_dict):
     security_opts = service_dict.get('security_opt', [])
-    result = []
-    for value in security_opts:
-        result.append(SecurityOpt.parse(value))
+    result = [SecurityOpt.parse(value) for value in security_opts]
     if result:
         service_dict['security_opt'] = result
     return service_dict

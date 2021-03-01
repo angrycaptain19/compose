@@ -59,9 +59,7 @@ class OneOffFilter(enum.Enum):
             labels.append('{}={}'.format(LABEL_ONE_OFF, "True"))
         elif value == cls.exclude:
             labels.append('{}={}'.format(LABEL_ONE_OFF, "False"))
-        elif value == cls.include:
-            pass
-        else:
+        elif value != cls.include:
             raise ValueError("Invalid value for one_off: {}".format(repr(value)))
 
 
@@ -248,10 +246,7 @@ class Project:
         links = []
         if 'links' in service_dict:
             for link in service_dict.get('links', []):
-                if ':' in link:
-                    service_name, link_name = link.split(':', 1)
-                else:
-                    service_name, link_name = link, None
+                service_name, link_name = link.split(':', 1) if ':' in link else (link, None)
                 try:
                     links.append((self.get_service(service_name), link_name))
                 except NoSuchService:
@@ -985,7 +980,7 @@ def translate_deploy_keys_to_container_config(service_dict):
             'MaximumRetryCount': deploy_dict['restart_policy'].get('max_attempts', 0)
         }
         for k in deploy_dict['restart_policy'].keys():
-            if k != 'condition' and k != 'max_attempts':
+            if k not in ['condition', 'max_attempts']:
                 ignored_keys.append('restart_policy.{}'.format(k))
 
     ignored_keys.extend(
